@@ -51,7 +51,7 @@ public class ShippingLineImpl implements ShippingLine {
 
 
     @Override
-    public void addRoute(String id, String beginningPort, String arrivalPort) {
+    public void addRoute(String id, String beginningPort, String arrivalPort, double kms) {
         Route route = getRoute(id);
         if (route == null) {
             route = new Route(id, beginningPort, arrivalPort);
@@ -295,6 +295,11 @@ public class ShippingLineImpl implements ShippingLine {
         return ships.get(id);
     }
 
+    @Override
+    public Port getPort(String id) {
+        return null;
+    }
+
     public Client getClient(String id) {
         return clients.get(new Client(id));
     }
@@ -313,6 +318,11 @@ public class ShippingLineImpl implements ShippingLine {
 
     public int numRoutes() {
         return routes.size();
+    }
+
+    @Override
+    public int numPorts() {
+        return -1;
     }
 
     public int numClients() {
