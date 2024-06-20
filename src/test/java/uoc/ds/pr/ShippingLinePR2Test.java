@@ -262,12 +262,15 @@ public class ShippingLinePR2Test extends ShippingLinePR1Test {
 
         Order order1 = theShippingLine.serveOrder("voyageId1");
         Assert.assertEquals(ShippingLinePR2.LoyaltyLevel.BRONZE, order1.getClient().getLevel());
+        Assert.assertEquals("clientId1", order1.getClient().getId());
 
         Order order2 = theShippingLine.serveOrder("voyageId1");
         Assert.assertEquals(ShippingLinePR2.LoyaltyLevel.BRONZE, order2.getClient().getLevel());
+        Assert.assertEquals("clientId2", order2.getClient().getId());
 
         Order order3 = theShippingLine.serveOrder("voyageId1");
         Assert.assertEquals(ShippingLinePR2.LoyaltyLevel.BRONZE, order3.getClient().getLevel());
+        Assert.assertEquals("clientId3", order3.getClient().getId());
     }
 
     @Test
@@ -304,11 +307,40 @@ public class ShippingLinePR2Test extends ShippingLinePR1Test {
 
         Iterator<Order> it = theShippingLine.getOrdersByShip("shipId4");
         Assert.assertTrue(it.hasNext());
-        Assert.assertEquals("clientId2", it.next().getClient().getId());
+        Order o = it.next();
+        Assert.assertEquals("clientId1", o.getClient().getId());
+
         Assert.assertTrue(it.hasNext());
-        Assert.assertEquals("clientId4", it.next().getClient().getId());
+        o = it.next();
+        Assert.assertEquals("clientId2", o.getClient().getId());
+
         Assert.assertTrue(it.hasNext());
-        Assert.assertEquals("clientId5", it.next().getClient().getId());
+        o = it.next();
+        Assert.assertEquals("clientId3", o.getClient().getId());
+
+
+        Assert.assertTrue(it.hasNext());
+        o = it.next();
+        Assert.assertEquals("clientId4", o.getClient().getId());
+
+        Assert.assertTrue(it.hasNext());
+        o = it.next();
+        Assert.assertEquals("clientId5", o.getClient().getId());
+
+        Assert.assertTrue(it.hasNext());
+        o = it.next();
+        Assert.assertEquals("clientId6", o.getClient().getId());
+
+        Assert.assertTrue(it.hasNext());
+        o = it.next();
+        Assert.assertEquals("clientId15", o.getClient().getId());
+
+
+        Assert.assertTrue(it.hasNext());
+        o = it.next();
+        Assert.assertEquals("clientId1", o.getClient().getId());
+
+
         Assert.assertFalse(it.hasNext());
     }
 
