@@ -21,6 +21,10 @@ Cada modelo tiene sus atributos, constructor, getters y setters.
 
 Además, he añadido el atributo level (*ShippingLinePR2.LoyaltyLevel*) en la clase Client. Por defecto el nivel del usuario es Bronze.
 
+**Excepciones**
+
+He creado todas las excepciones que se necesitaban para ShippingLinePR2Test y ShippingLinePR2 en la carpeta **src/main/java/uoc/ds/pr/exceptions**. Todas las excepciones extienden de DSException.
+
 ## Resultados tests
 
 ## Conclusión
