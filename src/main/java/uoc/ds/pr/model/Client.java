@@ -20,6 +20,7 @@ public class Client implements Comparable<Client> {
 
     // Nivel por defecto
     private ShippingLinePR2.LoyaltyLevel level = ShippingLinePR2.LoyaltyLevel.BRONZE;
+    private List<Order> orders;
 
 
     public Client(String id, String name, String surname) {
@@ -28,6 +29,7 @@ public class Client implements Comparable<Client> {
         this.surname = surname;
         this.reservations = new LinkedList<>();
         this.voyages = new LinkedList<>();
+        this.orders = new LinkedList<>();
     }
 
     public Client(String id) {
@@ -110,5 +112,9 @@ public class Client implements Comparable<Client> {
 
     public void setLevel(ShippingLinePR2.LoyaltyLevel level) {
         this.level = level;
+    }
+
+    public int numOrders() {
+        return orders.size();
     }
 }
