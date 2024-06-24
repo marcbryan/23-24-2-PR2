@@ -11,6 +11,7 @@ public class Client implements Comparable<Client> {
 
     public static final Comparator<Client> CMP = (c1, c2) -> c1.getId().compareTo(c2.getId());
     public static final Comparator<Client> CMP_V = (c1, c2)->Double.compare(c1.voyages.size(), c2.voyages.size());
+    public static final Comparator<Client> CMP_O = (c1, c2) -> Integer.compare(c1.numOrders(), c2.numOrders());
     private String id;
     private String name;
     private String surname;
@@ -116,5 +117,13 @@ public class Client implements Comparable<Client> {
 
     public int numOrders() {
         return orders.size();
+    }
+
+    public void addOrder(Order order) {
+        orders.insertEnd(order);
+    }
+
+    public Iterator<Order> orders() {
+        return orders.values();
     }
 }

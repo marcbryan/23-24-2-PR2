@@ -1,5 +1,6 @@
 package uoc.ds.pr.model;
 
+import edu.uoc.ds.adt.nonlinear.PriorityQueue;
 import edu.uoc.ds.adt.sequential.*;
 import edu.uoc.ds.traversal.Iterator;
 import uoc.ds.pr.ShippingLine;
@@ -26,6 +27,9 @@ public class Voyage {
 
     private boolean disembarked;
 
+    private PriorityQueue<Order> pendingOrders;
+    private List<Order> servedOrders;
+
     public Voyage(String id) {
         this.setId(id);
         disembarked = false;
@@ -44,6 +48,8 @@ public class Voyage {
         parking = new StackArrayImpl<>(ship.getnParkingSlots());
         this.availableParkingSlots = ship.getnParkingSlots();
         reservations = new LinkedList<>();
+        pendingOrders = new PriorityQueue<>(Order.CMP);
+        servedOrders = new LinkedList<>();
     }
 
     public String getId() {
@@ -230,5 +236,39 @@ public class Voyage {
 
     public int unLoadTime(String idVehicle) {
         return 0;
+    }
+
+    public void addOrder(Order order) {
+        pendingOrders.add(order);
+    }
+
+    public int numPendingOrders() {
+        return pendingOrders.size();
+    }
+
+    public int numServedOrders() {
+        return servedOrders.size();
+    }
+
+    public Order serveOrder() {
+        // Buscamos el pedido teniendo en cuenta el nivel de fidelización, la función poll() también lo elimina
+        Order servedOrder = pendingOrders.poll();
+        // Insertamos el pedido en la lista de pedidos servidos
+        servedOrders.insertEnd(servedOrder);
+        return servedOrder;
+    }
+
+    public Iterator<Order> orders() {
+        List<Order> allOrders = new LinkedList<>();
+
+        Iterator<Order> iterator = pendingOrders.values();
+        while (iterator.hasNext())
+            allOrders.insertEnd(iterator.next());
+
+        iterator = servedOrders.values();
+        while (iterator.hasNext())
+            allOrders.insertEnd(iterator.next());
+
+        return allOrders.values();
     }
 }

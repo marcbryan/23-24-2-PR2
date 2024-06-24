@@ -44,4 +44,11 @@ public class Product {
     public void setCategory(Category category) {
         this.category = category;
     }
+
+    public void update(String id, String name, String description, Category category) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.category = category;
+    }
 }

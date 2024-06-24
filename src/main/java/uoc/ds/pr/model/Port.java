@@ -44,4 +44,11 @@ public class Port {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public void update(String id, String name, String imageUrl, String description) {
+        this.id = id;
+        this.name = name;
+        this.imageUrl = imageUrl;
+        this.description = description;
+    }
 }

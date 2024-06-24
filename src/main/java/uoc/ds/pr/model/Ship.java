@@ -1,5 +1,11 @@
 package uoc.ds.pr.model;
 
+import edu.uoc.ds.adt.helpers.Position;
+import edu.uoc.ds.adt.sequential.LinkedList;
+import edu.uoc.ds.adt.sequential.List;
+import edu.uoc.ds.traversal.Iterator;
+import edu.uoc.ds.traversal.Traversal;
+
 public class Ship {
 
     private String id;
@@ -12,10 +18,12 @@ public class Ship {
 
     private int unLoadTimeinMinutes;
 
+    private List<Product> linkedProducts;
 
     public Ship(String id, String name, int nArmChairs, int nCabins2, int nCabins4, int nParkingLots, int unLoadTimeinMinutes) {
         setId(id);
         update(name, nArmChairs, nCabins2, nCabins4, nParkingLots, unLoadTimeinMinutes);
+        linkedProducts = new LinkedList<>();
     }
 
 
@@ -85,5 +93,19 @@ public class Ship {
         this.nParkingLots = nParkingLots;
     }
 
+    public Iterator<Product> linkedProducts() {
+        return linkedProducts.values();
+    }
 
+    public Traversal<Product> linkedProductsPositions() {
+        return linkedProducts.positions();
+    }
+
+    public void deleteLinkedProduct(Position<Product> pos) {
+        linkedProducts.delete(pos);
+    }
+
+    public int numLinkedProducts() {
+        return linkedProducts.size();
+    }
 }

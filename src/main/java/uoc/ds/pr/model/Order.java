@@ -2,7 +2,10 @@ package uoc.ds.pr.model;
 
 import edu.uoc.ds.adt.sequential.LinkedList;
 
+import java.util.Comparator;
+
 public class Order {
+    public static final Comparator<Order> CMP = Comparator.comparing(o -> o.getClient().getLevel());
     private Client client;
     private Voyage voyage;
     private LinkedList<Product> products;

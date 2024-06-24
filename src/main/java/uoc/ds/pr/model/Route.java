@@ -12,13 +12,20 @@ public class Route implements Comparable<Route> {
     private String id;
     private String beginningPort;
     private String arrivalPort;
+    private double kms;
+    private Port srcPort;
+    private Port dstPort;
     List<Voyage> voyages;
 
 
-    public Route(String id, String beginningPort, String arrivalPort) {
+    public Route(String id, Port srcPort, Port dstPort, double kms) {
         this.setId(id);
-        this.setBeginningPort(beginningPort);
-        this.setArrivalPort(arrivalPort);
+        this.setBeginningPort(srcPort.getId());
+        this.setArrivalPort(dstPort.getId());
+        this.setKms(kms);
+        this.srcPort = srcPort;
+        this.dstPort = dstPort;
+
         voyages = new LinkedList<>();
     }
 
@@ -52,6 +59,14 @@ public class Route implements Comparable<Route> {
         this.arrivalPort = arrivalPort;
     }
 
+    public double getKms() {
+        return kms;
+    }
+
+    public void setKms(double kms) {
+        this.kms = kms;
+    }
+
     @Override
     public int compareTo(Route o) {
         return this.id.compareTo(o.id);
@@ -79,5 +94,13 @@ public class Route implements Comparable<Route> {
                 voyages.delete(p);
             }
         }
+    }
+
+    public Port getSrcPort() {
+        return srcPort;
+    }
+
+    public Port getDstPort() {
+        return dstPort;
     }
 }

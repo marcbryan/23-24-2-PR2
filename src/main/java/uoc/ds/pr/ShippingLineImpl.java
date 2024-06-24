@@ -2,6 +2,7 @@ package uoc.ds.pr;
 
 import java.util.Date;
 
+import edu.uoc.ds.adt.nonlinear.HashTable;
 import edu.uoc.ds.adt.sequential.LinkedList;
 import edu.uoc.ds.adt.sequential.List;
 import edu.uoc.ds.traversal.Iterator;
@@ -22,7 +23,7 @@ public class ShippingLineImpl implements ShippingLine {
     private OrderedVector<Client>  bestClient;
 	private OrderedVector<Route> bestRoute;
 
-
+    private HashTable<String, Port> ports;
 
 
 
@@ -33,6 +34,7 @@ public class ShippingLineImpl implements ShippingLine {
         voyages = new DSLinkedList<>(Voyage.CMP);
         bestClient = new OrderedVector<>(MAX_CLIENTS, Client.CMP_V);
         bestRoute = new OrderedVector<>(MAX_NUM_ROUTES, Route.CMP_V);
+        ports = new HashTable<>();
     }
 
 
@@ -53,8 +55,10 @@ public class ShippingLineImpl implements ShippingLine {
     @Override
     public void addRoute(String id, String beginningPort, String arrivalPort, double kms) {
         Route route = getRoute(id);
+        Port srcPort = getPort(beginningPort);
+        Port dstPort = getPort(arrivalPort);
         if (route == null) {
-            route = new Route(id, beginningPort, arrivalPort);
+            route = new Route(id, srcPort, dstPort, kms);
             this.routes.put(id, route);
         }
         else {
@@ -297,7 +301,7 @@ public class ShippingLineImpl implements ShippingLine {
 
     @Override
     public Port getPort(String id) {
-        return null;
+        return ports.get(id);
     }
 
     public Client getClient(String id) {
@@ -331,4 +335,15 @@ public class ShippingLineImpl implements ShippingLine {
 
     public int numVoyages() {return voyages.size(); }
 
+    protected DSLinkedList<Voyage> getVoyages() {
+        return voyages;
+    }
+
+    protected DSArray<Route> getRoutes() {
+        return routes;
+    }
+
+    protected HashTable<String, Port> getPorts() {
+        return ports;
+    }
 }
