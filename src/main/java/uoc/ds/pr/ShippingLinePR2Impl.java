@@ -35,7 +35,6 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         best5Clients = new OrderedVector<>(MAX_CLIENTS, Client.CMP_O);
     }
 
-    // TODO: Implementar métodos
     @Override
     public void addPort(String id, String name, String imageUrl, String description) {
         Port port = getPort(id);
@@ -372,22 +371,6 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         if (numClients() == 0)
             throw new NoClientException();
 
-        // TODO: Eliminar
-        /*boolean noOrders = true;
-        Iterator<Voyage> iterator = getVoyages().values();
-        while (iterator.hasNext()) {
-            Voyage voyage = iterator.next();
-            // Si hay pedidos, rompemos el while
-            if (voyage.numPendingOrders() > 0 || voyage.numServedOrders() > 0) {
-                noOrders = false;
-                break;
-            }
-        }
-
-        // Si no hay pedidos, lanzamos la excepción
-        if (noOrders)
-            throw new NoClientException();*/
-
         // Si no ningún cliente en este vector ordenado es que no hay pedidos, entonces lanzamos la excepción
         if (best5Clients.isEmpty())
             throw new NoClientException();
@@ -414,20 +397,6 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         if (idAPort.equals(idBPort))
             throw new SamePortException();
 
-        /*boolean portAExists = false, portBExists = false;
-        Iterator<Port> iterator = ports.values();
-        while (iterator.hasNext()) {
-            Port port = iterator.next();
-            // Comprobamos si los puertos A y B existen
-            if (port.getId().equals(idAPort))
-                portAExists = true;
-            else if (port.getId().equals(idBPort))
-                portBExists = true;
-
-            // Si existen rompemos el while
-            if (portAExists && portBExists)
-                break;
-        }*/
         boolean[] portsExist = checkIfPortsExist(idAPort, idBPort);
         // Si el puerto A no existe, lanzamos la excepción
         if (!portsExist[0])
@@ -441,21 +410,6 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         ArrayList<String> visitedPorts = new ArrayList<>();
         visitedPorts.add(idAPort);
 
-        // TODO: Eliminar
-        /*Iterator<Edge<Route, String>> srcEdges = directedGraph.edgesWithSource(directedGraph.getVertex(idAPort));
-        while (srcEdges.hasNext()) {
-            DirectedEdge<Route, String> edge = (DirectedEdge<Route, String>) srcEdges.next();
-            String idBPort = ;
-            if (edge.getVertexDst().getValue().equals(idBPort))
-                return true;
-            else {
-                visitedPorts.add(portB.getId());
-
-            }
-        }
-
-        Iterator<Edge<Route, String>> edges = directedGraph.edgedWithDestination(directedGraph.getVertex(idBPort));*/
-
         // Devolvemos el resultado del método recursivo
         return visitPort(idAPort, idBPort, visitedPorts, directedGraph);
     }
@@ -466,20 +420,6 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         if (idAPort.equals(idBPort))
             throw new SamePortException();
 
-        /*boolean portAExists = false, portBExists = false;
-        Iterator<Port> iterator = ports.values();
-        while (iterator.hasNext()) {
-            Port port = iterator.next();
-            // Comprobamos si los puertos A y B existen
-            if (port.getId().equals(idAPort))
-                portAExists = true;
-            else if (port.getId().equals(idBPort))
-                portBExists = true;
-
-            // Si existen rompemos el while
-            if (portAExists && portBExists)
-                break;
-        }*/
         boolean[] portsExist = checkIfPortsExist(idAPort, idBPort);
         // Si el puerto A no existe, lanzamos la excepción
         if (!portsExist[0])
@@ -527,23 +467,27 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
                 srcPort = route.getArrivalPort();
         }
 
-        // TODO: Añadir comentarios
+        // En la lista de aristas visitadas empezamos de atrás hacia delante
         LinkedList<Route> bestRoute = new LinkedList<>();
         int length = settledEdges.size();
         for (int i = length - 1; i >= 0; i--) {
             Route route = settledEdges.get(i).getLabel();
 
+            // Si es la última (la primera iteración) de la lista esta arista pertenece al trayecto
             if (i == length - 1) {
                 srcPort = route.getBeginningPort();
                 bestRoute.insertBeginning(route);
             }
             else {
+                // Si el puerto de destino es el anterior puerto de origen esta arista pertenece al trayecto
                 if (route.getArrivalPort().equals(srcPort)) {
                     srcPort = route.getBeginningPort();
+                    // Lo insertamos al principio de la lista ya que la primera iteración empieza desde el destino
                     bestRoute.insertBeginning(route);
                 }
             }
 
+            // Lo eliminamos de la lista
             settledEdges.remove(i);
         }
 
@@ -574,8 +518,7 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         Map<Route, Route> parents = new HashMap<>();
         ArrayList<DirectedEdge<Route, String>> temp = new ArrayList<>();
 
-        // TODO: Añadir comentarios
-
+        // Añadimos las posibles aristas desde el origen al HashMap y a la lista temporal
         Iterator<Edge<Route, String>> iterator = directedGraph.edgesWithSource(directedGraph.getVertex(idAPort));
         while (iterator.hasNext()) {
             DirectedEdge<Route, String> edge = (DirectedEdge<Route, String>) iterator.next();
@@ -583,14 +526,18 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
             parents.put(edge.getLabel(), null);
         }
 
+        // Vamos iterando hasta que la lista temporal de aristas este vacía
         Route parent = null;
         while (!temp.isEmpty()) {
+            // Seleccionamos el primer valor de la lista
             parent = temp.get(0).getLabel();
             String srcPort = temp.get(0).getVertexDst().getValue();
+            // Vamos iterando las posibles aristas desde el vértice
             iterator = directedGraph.edgesWithSource(directedGraph.getVertex(srcPort));
             while (iterator.hasNext()) {
                 DirectedEdge<Route, String> edge = (DirectedEdge<Route, String>) iterator.next();
                 Route route = edge.getLabel();
+                // Si ya se ha visitado, pasamos a la siguiente iteración
                 boolean visited = parents.containsKey(route);
                 if (visited)
                     continue;
@@ -598,14 +545,16 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
                     temp.add(edge);
                     parents.put(route, parent);
 
+                    // Si el puerto de destino del trayecto es el que buscamos, se termina el while y se devuelve el camino (lista de trayectos)
                     if (route.getArrivalPort().equals(idBPort))
                         return getPath(parents, route).values();
                 }
             }
-
+            // Eliminamos el primer elemento de la lista
             temp.remove(0);
         }
 
+        // Aquí no se debería llegar, ya que se comprueba si existe un camino entre el puerto A y el B
         return null;
     }
 
@@ -666,6 +615,8 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
 
         return null;
     }
+
+    // Métodos privados (solo se utilizan en esta clase)
 
     /**
      * Se utiliza para comprobar si el producto se encuentra en el iterador
@@ -750,19 +701,9 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
      * @return Devuelve el grafo dirigido
      */
     private DirectedGraphImpl<String, Route> createDirectedGraph() {
-        // TODO: Eliminar
-        /*// Creamos una copia del HashTable de puertos
-        HashTable<String, Port> htPorts = new HashTable<>();
-        Iterator<Port> iterator = ports.values();
-        while (iterator.hasNext()) {
-            Port port = iterator.next();
-            htPorts.put(port.getId(), port);
-        }*/
-
         // Creamos el grafo dirigido
         DirectedGraphImpl<String, Route> directedGraph = new DirectedGraphImpl<>();
 
-        //Iterator<Route> itRoutes = getRoutes().values();
         Iterator<Route> iterator = getRoutes().values();
         while (iterator.hasNext()) {
             Route route = iterator.next();
@@ -816,7 +757,11 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         return false;
     }
 
-    // TODO: Añadir comentario
+    /**
+     * Método para añadir las aristas no visitadas en la lista
+     * @param unsettledEdges Lista con las aristas no visitadas
+     * @param iterator El iterador con las aristas posibles desde un vértice
+     */
     private void addUnsettledEdges(ArrayList<DirectedEdge<Route, String>> unsettledEdges, Iterator<Edge<Route, String>> iterator) {
         while (iterator.hasNext()) {
             DirectedEdge<Route, String> edge = (DirectedEdge<Route, String>) iterator.next();
@@ -826,14 +771,17 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         }
     }
 
-    // TODO: Añadir comentario
+    /**
+     * Método para obtener la arista con menor distancia entre las aristas no visitadas
+     * @param unsettledEdges Lista de aristas no visitadas
+     * @param distTo HashMap con las distancias hacia los vértices
+     * @return La arista con menor distancia
+     */
     private DirectedEdge<Route, String> getLowestDistanceEdge(ArrayList<DirectedEdge<Route, String>> unsettledEdges, Map<String, Double> distTo) {
         DirectedEdge<Route, String>  lowestDistanceEdge = null;
         double lowestDistance = Double.MAX_VALUE;
         // Recorremos las aristas que no han sido visitadas
         for (DirectedEdge<Route, String> edge : unsettledEdges) {
-        //while (unsettledEdges.hasNext()) {
-            //DirectedEdge<Route, String> edge = (DirectedEdge<Route, String>) unsettledEdges.next();
             Route route = edge.getLabel();
             // Sumamos la distancia desde el nodo inicial (es lo que se guarda en el HashMap) más la distancia de la arista
             double newDistance = distTo.get(route.getBeginningPort()) + route.getKms();
@@ -847,24 +795,25 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         return lowestDistanceEdge;
     }
 
-    // TODO: Añadir comentarios
+    /**
+     * Método para obtener el camino entre el puerto de origen y el puerto de destino
+     * @param parents El HashMap con los trayectos padre
+     * @param lastRoute El último trayecto del camino
+     * @return Un iterador con el camino
+     */
     private List<Route> getPath(Map<Route, Route> parents, Route lastRoute) {
         List<Route> path = new LinkedList<>();
+        // Añadimos el último trayecto a la lista
         path.insertBeginning(lastRoute);
 
+        // Obtenemos el trayecto padre del último trayecto
         Route route = parents.get(lastRoute);
-        //Route route = null;
-        /*for (Map.Entry<Route, Route> entry : parents.entrySet()) {
-            if (entry.getValue() != null) {
-                if (entry.getValue().equals(lastRoute)) {
-                    route = entry.getValue();
-                    break;
-                }
-            }
-        }*/
 
+        // Con este while vamos obteniendo el camino
         while (route != null) {
+            // Añadimos el trayecto al principio de la lista, ya que empezamos desde el final del camino
             path.insertBeginning(route);
+            // Asignamos su padre a la variable
             route = parents.get(route);
         }
         return path;
