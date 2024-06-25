@@ -30,9 +30,11 @@ public class Route implements Comparable<Route> {
     }
 
 
-    public void update(String name, String description) {
-        this.setBeginningPort(name);
-        this.setArrivalPort(description);
+    public void update(Port srcPort, Port dstPort) {
+        this.setBeginningPort(srcPort.getId());
+        this.setArrivalPort(dstPort.getId());
+        this.srcPort = srcPort;
+        this.dstPort = dstPort;
     }
 
     public String getId() {
@@ -74,7 +76,7 @@ public class Route implements Comparable<Route> {
 
     @Override
     public String toString() {
-        return this.getBeginningPort()+"-"+this.getArrivalPort();
+        return this.srcPort.getName()+"-"+this.dstPort.getName();
     }
 
     public void addVoyage(Voyage voyage) {

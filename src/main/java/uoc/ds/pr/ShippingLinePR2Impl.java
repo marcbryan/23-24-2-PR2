@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLinePR2 {
+    private int orderNumber;
     private HashTable<String, Port> ports;
     private List<Category> categories;
     private HashTable<String, Product> products;
@@ -27,7 +28,7 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
     public ShippingLinePR2Impl() {
         super();
 
-        //ports = new HashTable<>();
+        orderNumber = 1;
         ports = getPorts();
         categories = new LinkedList<>();
         products = new HashTable<>();
@@ -77,6 +78,9 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         else
             // Si ya existe, actualizamos los datos
             product.update(id, name, description, category);
+
+        // Añadimos el producto a su categoría
+        category.addProduct(product);
     }
 
     @Override
@@ -114,6 +118,9 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
             if (linkedProduct.getId().equals(productId))
                 throw new ProductAlreadyOnMenuException();
         }
+
+        // Añadimos el producto al buque
+        ship.linkProduct(product);
     }
 
     @Override
@@ -168,6 +175,10 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
                 products.insertEnd(product);
         }
 
+        // Si la travesía no tiene productos de esa categoría, lanzamos la excepción
+        if (products.isEmpty())
+            throw new NoProductsException();
+
         // Devolvemos el iterador
         return products.values();
     }
@@ -216,12 +227,15 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         if (!clientInReserv)
             throw new ClientIsNotInVoyageException();
 
+        LinkedList<Product> productList = (LinkedList<Product>) getProductList(products, voyage.getShip().linkedProducts());
+
         // Añadimos el pedido
-        Order order = new Order(client, voyage, price);
+        Order order = new Order(orderNumber, client, voyage, productList, price);
         client.addOrder(order);
         voyage.addOrder(order);
         // Actualizamos el vector ordenado de clientes con más pedidos
         updateBest5Clients(client);
+        orderNumber++;
     }
 
     @Override
@@ -263,11 +277,14 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         Iterator<Voyage> iterator = getVoyages().values();
         while (iterator.hasNext()) {
             Voyage voyage = iterator.next();
-            // Obtenemos los pedidos de la travesía
-            Iterator<Order> itOrders = voyage.orders();
-            // Las añadimos a la lista
-            while (itOrders.hasNext())
-                shipOrders.insertEnd(itOrders.next());
+            // Si la travesía la realiza el buque indicado, añadimos los pedidos
+            if (voyage.getShip().getId().equals(shipId)) {
+                // Obtenemos los pedidos de la travesía
+                Iterator<Order> itOrders = voyage.orders();
+                // Las añadimos a la lista
+                while (itOrders.hasNext())
+                    shipOrders.insertEnd(itOrders.next());
+            }
         }
 
         // Si no hay pedidos en ninguna de las travesías del buque, lanzamos la excepción
@@ -301,6 +318,10 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
             if (route.getBeginningPort().equals(portId))
                 routes.insertEnd(route);
         }
+
+        // Si no hay ningún trayecto con el puerto de origen especificado, lanzamos la excepción
+        if (routes.isEmpty())
+            throw new NoRouteException();
 
         return routes.values();
     }
@@ -337,6 +358,10 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
             if (voyage.getRoute().getId().equals(routeId))
                 voyages.insertEnd(voyage);
         }
+
+        // Si no hay travesías del trayecto indicado, lanzamos la excepción
+        if (voyages.isEmpty())
+            throw new NoVoyagesException();
 
         return voyages.values();
     }
@@ -405,10 +430,10 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         }*/
         boolean[] portsExist = checkIfPortsExist(idAPort, idBPort);
         // Si el puerto A no existe, lanzamos la excepción
-        if (portsExist[0])
+        if (!portsExist[0])
             throw new SrcPortNotFoundException();
         // Si el puerto B no existe, lanzamos la excepción
-        if (portsExist[1])
+        if (!portsExist[1])
             throw new DstPortNotFoundException();
 
         DirectedGraphImpl<String, Route> directedGraph = createDirectedGraph();
@@ -457,10 +482,10 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         }*/
         boolean[] portsExist = checkIfPortsExist(idAPort, idBPort);
         // Si el puerto A no existe, lanzamos la excepción
-        if (portsExist[0])
+        if (!portsExist[0])
             throw new SrcPortNotFoundException();
         // Si el puerto B no existe, lanzamos la excepción
-        if (portsExist[1])
+        if (!portsExist[1])
             throw new DstPortNotFoundException();
 
         DirectedGraphImpl<String, Route> directedGraph = createDirectedGraph();
@@ -476,11 +501,12 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         while (itVertexs.hasNext())
             distTo.put(itVertexs.next().getValue(), 0.0);
 
+        String srcPort = idAPort;
         ArrayList<DirectedEdge<Route, String>> settledEdges = new ArrayList<>();
         ArrayList<DirectedEdge<Route, String>> unsettledEdges = new ArrayList<>();
         boolean end = false;
         while (!end) {
-            Iterator<Edge<Route, String>> iterator = directedGraph.edgesWithSource(directedGraph.getVertex(idAPort));
+            Iterator<Edge<Route, String>> iterator = directedGraph.edgesWithSource(directedGraph.getVertex(srcPort));
             // Añadimos las aristas a la lista de aristas no visitadas
             addUnsettledEdges(unsettledEdges, iterator);
 
@@ -497,15 +523,26 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
             // Si el puerto de destino es el puerto B, se termina el while
             if (route.getArrivalPort().equals(idBPort))
                 end = true;
+            else
+                srcPort = route.getArrivalPort();
         }
 
+        // TODO: Añadir comentarios
         LinkedList<Route> bestRoute = new LinkedList<>();
         int length = settledEdges.size();
         for (int i = length - 1; i >= 0; i--) {
             Route route = settledEdges.get(i).getLabel();
-            double dist = distTo.get(route.getArrivalPort()) - route.getKms();
-            if (dist == distTo.get(route.getBeginningPort()))
+
+            if (i == length - 1) {
+                srcPort = route.getBeginningPort();
                 bestRoute.insertBeginning(route);
+            }
+            else {
+                if (route.getArrivalPort().equals(srcPort)) {
+                    srcPort = route.getBeginningPort();
+                    bestRoute.insertBeginning(route);
+                }
+            }
 
             settledEdges.remove(i);
         }
@@ -521,10 +558,10 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
 
         boolean[] portsExist = checkIfPortsExist(idAPort, idBPort);
         // Si el puerto A no existe, lanzamos la excepción
-        if (portsExist[0])
+        if (!portsExist[0])
             throw new SrcPortNotFoundException();
         // Si el puerto B no existe, lanzamos la excepción
-        if (portsExist[1])
+        if (!portsExist[1])
             throw new DstPortNotFoundException();
 
         DirectedGraphImpl<String, Route> directedGraph = createDirectedGraph();
@@ -633,7 +670,7 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
     /**
      * Se utiliza para comprobar si el producto se encuentra en el iterador
      * @param products El vector con los ids de los productos
-     * @param it El iterador necesario
+     * @param it El iterador con todos los productos
      * @return true si el producto se encuentra en el iterador, false en caso contrario
      */
     private boolean productsInIterator(String[] products, Iterator<Product> it) {
@@ -654,6 +691,27 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         }
 
         return true;
+    }
+
+    /**
+     * Este método se utiliza para obtener los productos de un pedido buscándolos en la lista de productos
+     * @param products El vector con los ids de los productos que queremos
+     * @param it El iterador con todos los productos
+     * @return La lista de productos que queremos
+     */
+    private List<Product> getProductList(String[] products, Iterator<Product> it) {
+        List<Product> productList = new LinkedList<>();
+        for (String productId : products) {
+            while (it.hasNext()) {
+                Product product = it.next();
+                // Si está en la lista de productos, lo añadimos a lista de productos del pedido
+                if (product.getId().equals(productId)) {
+                    productList.insertEnd(product);
+                    break;
+                }
+            }
+        }
+        return productList;
     }
 
     private void updateBest5Clients(Client client) {
@@ -794,14 +852,16 @@ public class ShippingLinePR2Impl extends ShippingLineImpl implements ShippingLin
         List<Route> path = new LinkedList<>();
         path.insertBeginning(lastRoute);
 
-        //Route route = parents.get(lastRoute);
-        Route route = null;
-        for (Map.Entry<Route, Route> entry : parents.entrySet()) {
-            if (entry.getValue().equals(lastRoute)) {
-                route = entry.getValue();
-                break;
+        Route route = parents.get(lastRoute);
+        //Route route = null;
+        /*for (Map.Entry<Route, Route> entry : parents.entrySet()) {
+            if (entry.getValue() != null) {
+                if (entry.getValue().equals(lastRoute)) {
+                    route = entry.getValue();
+                    break;
+                }
             }
-        }
+        }*/
 
         while (route != null) {
             path.insertBeginning(route);

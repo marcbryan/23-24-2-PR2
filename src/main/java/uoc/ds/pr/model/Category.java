@@ -42,4 +42,8 @@ public class Category {
     public Iterator<Product> products() {
         return products.values();
     }
+
+    public void addProduct(Product product) {
+        products.put(product.getId(), product);
+    }
 }

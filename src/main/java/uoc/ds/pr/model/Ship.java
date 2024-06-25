@@ -97,6 +97,10 @@ public class Ship {
         return linkedProducts.values();
     }
 
+    public void linkProduct(Product product) {
+        linkedProducts.insertEnd(product);
+    }
+
     public Traversal<Product> linkedProductsPositions() {
         return linkedProducts.positions();
     }

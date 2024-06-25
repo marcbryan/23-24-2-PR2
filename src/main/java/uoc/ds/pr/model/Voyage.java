@@ -251,7 +251,7 @@ public class Voyage {
     }
 
     public Order serveOrder() {
-        // Buscamos el pedido teniendo en cuenta el nivel de fidelización, la función poll() también lo elimina
+        // Buscamos el pedido teniendo en cuenta el nivel de fidelización y el número del pedido, la función poll() lo elimina
         Order servedOrder = pendingOrders.poll();
         // Insertamos el pedido en la lista de pedidos servidos
         servedOrders.insertEnd(servedOrder);
@@ -261,11 +261,11 @@ public class Voyage {
     public Iterator<Order> orders() {
         List<Order> allOrders = new LinkedList<>();
 
-        Iterator<Order> iterator = pendingOrders.values();
+        Iterator<Order> iterator = servedOrders.values();
         while (iterator.hasNext())
             allOrders.insertEnd(iterator.next());
 
-        iterator = servedOrders.values();
+        iterator = pendingOrders.values();
         while (iterator.hasNext())
             allOrders.insertEnd(iterator.next());
 

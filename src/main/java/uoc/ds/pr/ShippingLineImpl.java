@@ -2,6 +2,7 @@ package uoc.ds.pr;
 
 import java.util.Date;
 
+import edu.uoc.ds.adt.nonlinear.DictionaryAVLImpl;
 import edu.uoc.ds.adt.nonlinear.HashTable;
 import edu.uoc.ds.adt.sequential.LinkedList;
 import edu.uoc.ds.adt.sequential.List;
@@ -9,16 +10,16 @@ import edu.uoc.ds.traversal.Iterator;
 import uoc.ds.pr.exceptions.*;
 import uoc.ds.pr.model.*;
 import uoc.ds.pr.util.DSArray;
-import uoc.ds.pr.util.DSLinkedList;
 import uoc.ds.pr.util.OrderedVector;
 
 
 public class ShippingLineImpl implements ShippingLine {
 
     private DSArray<Ship> ships;
-    private DSArray<Route> routes;
-    private DSLinkedList<Client> clients;
-    private DSLinkedList<Voyage> voyages;
+    // Cambio de estructura de datos en estos 3 atributos
+    private HashTable<String, Route> routes;
+    private DictionaryAVLImpl<String, Client> clients;
+    private DictionaryAVLImpl<String, Voyage> voyages;
 
     private OrderedVector<Client>  bestClient;
 	private OrderedVector<Route> bestRoute;
@@ -29,9 +30,9 @@ public class ShippingLineImpl implements ShippingLine {
 
     public ShippingLineImpl() {
         ships = new DSArray<>(MAX_NUM_SHIPS);
-        routes = new DSArray<>(MAX_NUM_ROUTES);
-        clients = new DSLinkedList<>(Client.CMP);
-        voyages = new DSLinkedList<>(Voyage.CMP);
+        routes = new HashTable<>();
+        clients = new DictionaryAVLImpl<>();
+        voyages = new DictionaryAVLImpl<>();
         bestClient = new OrderedVector<>(MAX_CLIENTS, Client.CMP_V);
         bestRoute = new OrderedVector<>(MAX_NUM_ROUTES, Route.CMP_V);
         ports = new HashTable<>();
@@ -53,18 +54,31 @@ public class ShippingLineImpl implements ShippingLine {
 
 
     @Override
-    public void addRoute(String id, String beginningPort, String arrivalPort, double kms) {
+    public void addRoute(String id, String beginningPort, String arrivalPort, double kms) throws SrcPortNotFoundException, DstPortNotFoundException, RouteAlreadyExistException {
         Route route = getRoute(id);
         Port srcPort = getPort(beginningPort);
         Port dstPort = getPort(arrivalPort);
+
+        if (srcPort == null)
+            throw new SrcPortNotFoundException();
+
+        if (dstPort == null)
+            throw new DstPortNotFoundException();
+
+        Iterator<Route> iterator = routes.values();
+        while (iterator.hasNext()) {
+            Route foundRoute = iterator.next();
+            // Si ya existe la ruta y se intenta añadirla con otro id, lanzamos la excepción
+            if (foundRoute.getBeginningPort().equals(beginningPort) && foundRoute.getArrivalPort().equals(arrivalPort))
+                throw new RouteAlreadyExistException();
+        }
+
         if (route == null) {
             route = new Route(id, srcPort, dstPort, kms);
             this.routes.put(id, route);
         }
-        else {
-            route.update(beginningPort, arrivalPort);
-        }
-
+        else
+            route.update(srcPort, dstPort);
     }
 
     public void addClient(String id, String name, String surname) {
@@ -72,7 +86,7 @@ public class ShippingLineImpl implements ShippingLine {
         Client client = getClient(id);
         if (client == null) {
             client = new Client(id, name, surname);
-            clients.insertEnd(client);
+            clients.put(id, client);
         }
         else {
             client.update(name, surname);
@@ -96,7 +110,7 @@ public class ShippingLineImpl implements ShippingLine {
         Voyage voyage = getVoyage(id);
         if (voyage == null) {
             voyage = new Voyage(id, departureDt, arrivalDt, ship, route);
-            voyages.insertEnd(voyage);
+            voyages.put(id, voyage);
             route.addVoyage(voyage);
             updateBestRoute(voyage.getRoute());
         }
@@ -305,7 +319,7 @@ public class ShippingLineImpl implements ShippingLine {
     }
 
     public Client getClient(String id) {
-        return clients.get(new Client(id));
+        return clients.get(id);
     }
 
     public Route getRoute(String idRoute) {
@@ -313,7 +327,7 @@ public class ShippingLineImpl implements ShippingLine {
     }
 
     public Voyage getVoyage(String id) {
-        return voyages.get(new Voyage(id));
+        return voyages.get(id);
     }
 
     public int numShips() {
@@ -335,11 +349,11 @@ public class ShippingLineImpl implements ShippingLine {
 
     public int numVoyages() {return voyages.size(); }
 
-    protected DSLinkedList<Voyage> getVoyages() {
+    protected DictionaryAVLImpl<String, Voyage> getVoyages() {
         return voyages;
     }
 
-    protected DSArray<Route> getRoutes() {
+    protected HashTable<String, Route> getRoutes() {
         return routes;
     }
 
